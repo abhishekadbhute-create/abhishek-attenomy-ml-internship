@@ -1,184 +1,169 @@
-"""
-Attenomy ML Engineering : Core Data Utilities
-Provides defensive ingestion, dataset health summaries, outlier detection,
-and strict leak-free train/val/test splitting.
-"""
+"""Data handling utilities for the Attenomy ML practice repo."""
 
-from typing import Tuple, Optional, Dict, Any
-import os
+from pathlib import Path
+
 import pandas as pd
-import numpy as np
+from sklearn.model_selection import train_test_split
+
+REQUIRED_COLUMNS = ["transaction_id", "account_id", "timestamp", "is_anomaly"]
+NUMERIC_COLUMNS = [
+    "session_duration_sec",
+    "payload_size_kb",
+    "latency_ms",
+    "retry_count",
+]
 
 
 def load_data(path: str) -> pd.DataFrame:
-    """
-    Ingests CSV or Parquet tabular datasets defensively.
-    
+    """Load a CSV or JSON dataset with defensive checks and type casting.
+
     Args:
-        path: Path to CSV or Parquet file.
-        
+        path: Path to a .csv or .json file.
+
     Returns:
-        pd.DataFrame containing ingested dataset.
-        
+        A DataFrame with stripped strings, blanks filled as "UNKNOWN",
+        numeric columns coerced, and timestamp parsed as UTC datetime.
+
     Raises:
-        FileNotFoundError: If the specified file does not exist.
-        ValueError: If file extension is unsupported or file is empty.
+        FileNotFoundError: If the file does not exist.
+        ValueError: If the file is empty, has an unsupported extension,
+            or is missing required columns.
+
+    Examples:
+        >>> load_data("no_such_file.csv")
+        Traceback (most recent call last):
+            ...
+        FileNotFoundError: File not found: no_such_file.csv
     """
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"Dataset path not found: {path}")
-    
-    if os.path.getsize(path) == 0:
-        raise ValueError(f"Dataset file is empty (0 bytes): {path}")
-        
-    ext = os.path.splitext(path)[1].lower()
-    if ext == ".csv":
-        df = pd.read_csv(path)
-    elif ext in [".parquet", ".pq"]:
-        df = pd.read_parquet(path)
+    p = Path(path)
+    if not p.exists():
+        raise FileNotFoundError(f"File not found: {path}")
+    if p.stat().st_size == 0:
+        raise ValueError(f"File is empty: {path}")
+
+    suffix = p.suffix.lower()
+    if suffix == ".csv":
+        df = pd.read_csv(p)
+    elif suffix == ".json":
+        df = pd.read_json(p)
     else:
-        raise ValueError(f"Unsupported file format '{ext}'. Expected .csv or .parquet")
-        
-    if df.empty:
-        raise ValueError(f"Dataset in {path} contains no rows.")
-        
+        raise ValueError(f"Unsupported file type: {suffix}")
+
+    missing = [c for c in REQUIRED_COLUMNS if c not in df.columns]
+    if missing:
+        raise ValueError(f"Missing required columns: {missing}")
+
+    for col in NUMERIC_COLUMNS:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+    df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce", utc=True)
+
+    for col in df.columns:
+        if pd.api.types.is_string_dtype(df[col]):
+            s = df[col].astype("string").str.strip()
+            s = s.mask(s.str.lower().isin(["", "nan", "none"]))
+            df[col] = s.fillna("UNKNOWN")
     return df
 
 
-def summarize_dataframe_health(df: pd.DataFrame) -> Dict[str, Any]:
-    """
-    Computes diagnostic health metrics for a given DataFrame.
-    
+def summarize_dataframe_health(df: pd.DataFrame) -> dict:
+    """Summarize the structural health of a DataFrame.
+
     Args:
-        df: Input pandas DataFrame.
-        
+        df: The DataFrame to inspect.
+
     Returns:
-        Dictionary containing shape, memory footprint, null counts,
-        duplicate counts, and column data types.
+        A dict with keys n_rows, n_cols, dtypes, null_pct (percent null per
+        column), duplicate_rows, and memory_mb.
+
+    Examples:
+        >>> df = pd.DataFrame({"a": [1, 1, None], "b": ["x", "x", "y"]})
+        >>> h = summarize_dataframe_health(df)
+        >>> h["n_rows"], h["n_cols"], h["duplicate_rows"]
+        (3, 2, 1)
+        >>> h["null_pct"]
+        {'a': 33.33, 'b': 0.0}
     """
-    if not isinstance(df, pd.DataFrame):
-        raise TypeError("Input must be a pandas DataFrame.")
-        
-    total_cells = df.shape[0] * df.shape[1]
-    null_counts = df.isnull().sum().to_dict()
-    total_nulls = int(sum(null_counts.values()))
-    null_pct = (total_nulls / total_cells * 100.0) if total_cells > 0 else 0.0
-    
-    dup_rows = int(df.duplicated().sum())
-    mem_bytes = int(df.memory_usage(deep=True).sum())
-    
     return {
-        "row_count": int(df.shape[0]),
-        "column_count": int(df.shape[1]),
-        "memory_mb": round(mem_bytes / (1024 * 1024), 2),
-        "total_nulls": total_nulls,
-        "null_percentage": round(null_pct, 2),
-        "duplicate_rows": dup_rows,
-        "null_counts_per_column": null_counts,
-        "column_dtypes": {col: str(dtype) for col, dtype in df.dtypes.items()}
+        "n_rows": int(df.shape[0]),
+        "n_cols": int(df.shape[1]),
+        "dtypes": {c: str(t) for c, t in df.dtypes.items()},
+        "null_pct": (df.isna().mean() * 100).round(2).to_dict(),
+        "duplicate_rows": int(df.duplicated().sum()),
+        "memory_mb": round(df.memory_usage(deep=True).sum() / 1024**2, 4),
     }
 
 
-def detect_outliers_iqr(df: pd.DataFrame, column: str, multiplier: float = 1.5) -> pd.Series:
-    """
-    Identifies outliers using the Interquartile Range (IQR) method.
-    
+def detect_outliers_iqr(
+    df: pd.DataFrame, column: str, multiplier: float = 1.5
+) -> pd.Series:
+    """Flag outliers in a numeric column using the IQR rule.
+
     Args:
         df: Input DataFrame.
-        column: Numerical column name to audit.
+        column: Numeric column to check.
         multiplier: IQR multiplier (default 1.5).
-        
+
     Returns:
-        Boolean pd.Series indicating whether each row is an outlier.
+        Boolean Series, True where the value is an outlier.
+
+    Raises:
+        KeyError: If the column does not exist.
+
+    Examples:
+        >>> d = pd.DataFrame({"v": [1, 2, 3, 4, 100]})
+        >>> detect_outliers_iqr(d, "v").tolist()
+        [False, False, False, False, True]
     """
     if column not in df.columns:
         raise KeyError(f"Column '{column}' does not exist in DataFrame.")
-        
-    series = df[column].dropna()
-    q1 = series.quantile(0.25)
-    q3 = series.quantile(0.75)
+    q1 = df[column].quantile(0.25)
+    q3 = df[column].quantile(0.75)
     iqr = q3 - q1
-    lower_bound = q1 - (multiplier * iqr)
-    upper_bound = q3 + (multiplier * iqr)
-    
-    return (df[column] < lower_bound) | (df[column] > upper_bound)
+    return (df[column] < q1 - multiplier * iqr) | (df[column] > q3 + multiplier * iqr)
 
 
 def train_val_test_split(
     df: pd.DataFrame,
-    train_ratio: float = 0.70,
-    val_ratio: float = 0.15,
-    test_ratio: float = 0.15,
-    stratify_col: Optional[str] = None,
-    seed: int = 42
-) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """
-    Partitions DataFrame into clean, leak-free train, validation, and test subsets.
-    
-    Guarantees:
-        1. Non-overlapping disjoint indices across all three splits.
-        2. Proportional preservation of class labels when stratify_col is specified.
-        3. Deterministic repeatability through fixed pseudo-random seed.
-        
+    ratios: tuple,
+    seed: int,
+    stratify_col: str = None,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Split a DataFrame into train, validation, and test sets.
+
     Args:
-        df: Input DataFrame.
-        train_ratio: Proportion allocated to training split.
-        val_ratio: Proportion allocated to validation split.
-        test_ratio: Proportion allocated to test split.
-        stratify_col: Column name to use for stratified sampling (optional).
-        seed: Random seed for deterministic reproducibility.
-        
+        df: The DataFrame to split.
+        ratios: (train, val, test) fractions that sum to 1.
+        seed: Random seed for reproducibility.
+        stratify_col: Optional column to stratify on (e.g. the target).
+
     Returns:
-        Tuple of (train_df, val_df, test_df).
+        A (train, val, test) tuple of DataFrames.
+
+    Raises:
+        ValueError: If ratios do not sum to 1.
+
+    Examples:
+        >>> df = pd.DataFrame({"x": range(100), "y": [0, 1] * 50})
+        >>> tr, va, te = train_val_test_split(
+        ...     df, (0.7, 0.15, 0.15), seed=42, stratify_col="y"
+        ... )
+        >>> len(tr), len(va), len(te)
+        (70, 15, 15)
     """
-    total = train_ratio + val_ratio + test_ratio
-    if not (0.999 <= total <= 1.001):
-        raise ValueError(f"Split ratios must sum to 1.0. Received sum: {total}")
-        
-    rng = np.random.default_rng(seed)
+    if abs(sum(ratios) - 1.0) > 1e-9:
+        raise ValueError(f"ratios must sum to 1, got {sum(ratios)}")
+
     n = len(df)
-    
-    if stratify_col is not None:
-        if stratify_col not in df.columns:
-            raise KeyError(f"Stratify column '{stratify_col}' not found.")
-            
-        train_indices = []
-        val_indices = []
-        test_indices = []
-        
-        # Group by label to preserve class distribution
-        for _, group in df.groupby(stratify_col):
-            group_idx = group.index.to_numpy()
-            rng.shuffle(group_idx)
-            
-            g_n = len(group_idx)
-            n_train = int(round(g_n * train_ratio))
-            n_val = int(round(g_n * val_ratio))
-            
-            train_indices.extend(group_idx[:n_train])
-            val_indices.extend(group_idx[n_train:n_train + n_val])
-            test_indices.extend(group_idx[n_train + n_val:])
-            
-        train_df = df.loc[train_indices].copy()
-        val_df = df.loc[val_indices].copy()
-        test_df = df.loc[test_indices].copy()
-    else:
-        indices = np.arange(n)
-        rng.shuffle(indices)
-        
-        n_train = int(round(n * train_ratio))
-        n_val = int(round(n * val_ratio))
-        
-        train_df = df.iloc[indices[:n_train]].copy()
-        val_df = df.iloc[indices[n_train:n_train + n_val]].copy()
-        test_df = df.iloc[indices[n_train + n_val:]].copy()
-        
-    # Verify index disjointness to ensure zero leakage
-    train_set = set(train_df.index)
-    val_set = set(val_df.index)
-    test_set = set(test_df.index)
-    
-    assert train_set.isdisjoint(val_set), "Data leakage detected: train and val share indices!"
-    assert train_set.isdisjoint(test_set), "Data leakage detected: train and test share indices!"
-    assert val_set.isdisjoint(test_set), "Data leakage detected: val and test share indices!"
-    
-    return train_df, val_df, test_df
+    n_train = round(n * ratios[0])
+    n_test = round(n * ratios[2])
+
+    strat = df[stratify_col] if stratify_col else None
+    train, temp = train_test_split(
+        df, train_size=n_train, random_state=seed, stratify=strat
+    )
+    strat_temp = temp[stratify_col] if stratify_col else None
+    val, test = train_test_split(
+        temp, test_size=n_test, random_state=seed, stratify=strat_temp
+    )
+    return train, val, test
