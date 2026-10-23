@@ -1,5 +1,4 @@
-# Intern Engineering Reflection Journal
-**Intern Name:** Abhishek Adbhute  
+# Intern Engineering Reflection Journal**Intern Name:** Abhishek Adbhute  
 **Repository:** https://github.com/abhishekadbhute-create/abhishek-attenomy-ml-internship  
 **Cohort:** ML Engineer Internship (Cohort 2026)  
 
@@ -33,3 +32,4 @@
 - **Key Realizations:** The memo is only useful if each risk (imbalance, label leakage, collinearity) is tied to evidence from the analysis and has a concrete mitigation for Week 2. Writing down the open questions (is `error_code` known before the label, is `NO_ERROR` the right reading) was as important as the findings.
 - **Code Links:** [`reports/week1_insights_memo.pdf`](https://github.com/abhishekadbhute-create/abhishek-attenomy-ml-internship/blob/main/reports/week1_insights_memo.pdf)
 - **Commit Links:** [Final submission commits](https://github.com/abhishekadbhute-create/abhishek-attenomy-ml-internship/commits/main)
+ek 1 final submission commit]
