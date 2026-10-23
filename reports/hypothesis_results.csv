@@ -1,0 +1,6 @@
+hypothesis,feature,test,statistic,dof,p_value,effect_size,reject_H0
+H1,error_code,chi-square,1426.21,5,< 1e-300,Cramer's V = 0.285,True
+H2,latency_ms,Mann-Whitney U (two-sided),6146454.0,N/A,0.0028,AUC = 0.534,True
+H3,client_tier,chi-square,1.75,4,0.782,Cramer's V = 0.010,False
+H4,session_duration_sec,Mann-Whitney U (two-sided),5163200.0,N/A,0.392,AUC = 0.490,False
+H5,retry_count,Mann-Whitney U (greater),6679158.0,N/A,2.5e-17,AUC = 0.580,True
