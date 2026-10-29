@@ -27,7 +27,10 @@ CATEGORICAL_FEATURES = [
 FEATURES = NUMERIC_FEATURES + CATEGORICAL_FEATURES
 
 
-def build_preprocessor() -> ColumnTransformer:
+def build_preprocessor(
+    num_cols: list[str] | None = None,
+    cat_cols: list[str] | None = None,
+) -> ColumnTransformer:
     """Build the preprocessing step (not yet fitted).
 
     Numeric columns get median imputation then scaling; categorical columns
@@ -35,9 +38,18 @@ def build_preprocessor() -> ColumnTransformer:
     the pipeline is fitted, so inside cross-validation each fold fits it on
     its own training rows only.
 
+    Args:
+        num_cols: Numeric columns to use. Defaults to NUMERIC_FEATURES.
+        cat_cols: Categorical columns to use. Defaults to CATEGORICAL_FEATURES.
+
     Returns:
         An unfitted ColumnTransformer.
     """
+    if num_cols is None:
+        num_cols = NUMERIC_FEATURES
+    if cat_cols is None:
+        cat_cols = CATEGORICAL_FEATURES
+
     numeric = Pipeline(
         [
             ("imputer", SimpleImputer(strategy="median")),
@@ -52,23 +64,27 @@ def build_preprocessor() -> ColumnTransformer:
     )
     return ColumnTransformer(
         [
-            ("num", numeric, NUMERIC_FEATURES),
-            ("cat", categorical, CATEGORICAL_FEATURES),
+            ("num", numeric, num_cols),
+            ("cat", categorical, cat_cols),
         ]
     )
 
-
-def build_pipeline(model: BaseEstimator) -> Pipeline:
+def build_pipeline(
+    model: BaseEstimator,
+    num_cols: list[str] | None = None,
+    cat_cols: list[str] | None = None,
+) -> Pipeline:
     """Attach a model to the preprocessing step.
 
     Args:
         model: Any scikit-learn classifier.
+        num_cols: Numeric columns to use. Defaults to NUMERIC_FEATURES.
+        cat_cols: Categorical columns to use. Defaults to CATEGORICAL_FEATURES.
 
     Returns:
         A Pipeline with steps "prep" and "clf".
     """
-    return Pipeline([("prep", build_preprocessor()), ("clf", model)])
-
+    return Pipeline([("prep", build_preprocessor(num_cols, cat_cols)), ("clf", model)])
 
 def split_xy(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
     """Separate model features from the target.
