@@ -1,0 +1,105 @@
+error_code,model,group,mode,metric,mean,std,verdict
+True,logreg,ALL,add_to_base,roc,-0.0056,0.0067,no clear effect
+True,logreg,ALL,add_to_base,pr,-0.0057,0.0149,no clear effect
+True,logreg,ratio,add_to_base,roc,-0.0001,0.0019,no clear effect
+True,logreg,ratio,add_to_base,pr,-0.0021,0.0072,no clear effect
+True,logreg,ratio,drop_from_full,roc,-0.0001,0.0027,no clear effect
+True,logreg,ratio,drop_from_full,pr,-0.0022,0.0073,no clear effect
+True,logreg,time,add_to_base,roc,-0.0005,0.0014,no clear effect
+True,logreg,time,add_to_base,pr,-0.0021,0.0042,no clear effect
+True,logreg,time,drop_from_full,roc,-0.0007,0.0021,no clear effect
+True,logreg,time,drop_from_full,pr,-0.0023,0.0034,no clear effect
+True,logreg,history,add_to_base,roc,-0.0019,0.0019,hurts
+True,logreg,history,add_to_base,pr,-0.0017,0.0014,hurts
+True,logreg,history,drop_from_full,roc,-0.0016,0.0017,no clear effect
+True,logreg,history,drop_from_full,pr,-0.0006,0.0013,no clear effect
+True,logreg,freq,add_to_base,roc,-0.0006,0.002,no clear effect
+True,logreg,freq,add_to_base,pr,-0.0004,0.0012,no clear effect
+True,logreg,freq,drop_from_full,roc,-0.0006,0.0018,no clear effect
+True,logreg,freq,drop_from_full,pr,-0.0007,0.0018,no clear effect
+True,logreg,target,add_to_base,roc,0.0003,0.0006,no clear effect
+True,logreg,target,add_to_base,pr,0.0007,0.001,no clear effect
+True,logreg,target,drop_from_full,roc,0.001,0.0011,no clear effect
+True,logreg,target,drop_from_full,pr,0.0004,0.0012,no clear effect
+True,logreg,bins,add_to_base,roc,-0.0036,0.0037,no clear effect
+True,logreg,bins,add_to_base,pr,0.0007,0.0033,no clear effect
+True,logreg,bins,drop_from_full,roc,-0.0028,0.0038,no clear effect
+True,logreg,bins,drop_from_full,pr,0.0002,0.0052,no clear effect
+True,rf,ALL,add_to_base,roc,-0.007,0.0123,no clear effect
+True,rf,ALL,add_to_base,pr,0.0095,0.011,no clear effect
+True,rf,ratio,add_to_base,roc,0.0076,0.0053,helps
+True,rf,ratio,add_to_base,pr,0.0054,0.0095,no clear effect
+True,rf,ratio,drop_from_full,roc,-0.0013,0.009,no clear effect
+True,rf,ratio,drop_from_full,pr,-0.0029,0.0168,no clear effect
+True,rf,time,add_to_base,roc,-0.0084,0.0109,no clear effect
+True,rf,time,add_to_base,pr,0.0061,0.0138,no clear effect
+True,rf,time,drop_from_full,roc,-0.0048,0.008,no clear effect
+True,rf,time,drop_from_full,pr,-0.0122,0.0125,no clear effect
+True,rf,history,add_to_base,roc,-0.0088,0.0092,no clear effect
+True,rf,history,add_to_base,pr,0.0099,0.014,no clear effect
+True,rf,history,drop_from_full,roc,-0.0076,0.0105,no clear effect
+True,rf,history,drop_from_full,pr,-0.0038,0.0118,no clear effect
+True,rf,freq,add_to_base,roc,0.005,0.0068,no clear effect
+True,rf,freq,add_to_base,pr,0.0151,0.0142,helps
+True,rf,freq,drop_from_full,roc,-0.0004,0.0039,no clear effect
+True,rf,freq,drop_from_full,pr,-0.0045,0.0159,no clear effect
+True,rf,target,add_to_base,roc,0.0053,0.0061,no clear effect
+True,rf,target,add_to_base,pr,0.0107,0.0137,no clear effect
+True,rf,target,drop_from_full,roc,-0.0023,0.0074,no clear effect
+True,rf,target,drop_from_full,pr,0.0003,0.0113,no clear effect
+True,rf,bins,add_to_base,roc,-0.0058,0.0125,no clear effect
+True,rf,bins,add_to_base,pr,-0.0058,0.0074,no clear effect
+True,rf,bins,drop_from_full,roc,-0.0037,0.0024,hurts
+True,rf,bins,drop_from_full,pr,-0.0094,0.0171,no clear effect
+False,logreg,ALL,add_to_base,roc,-0.0015,0.006,no clear effect
+False,logreg,ALL,add_to_base,pr,0.0034,0.0079,no clear effect
+False,logreg,ratio,add_to_base,roc,-0.0009,0.0028,no clear effect
+False,logreg,ratio,add_to_base,pr,-0.0006,0.0042,no clear effect
+False,logreg,ratio,drop_from_full,roc,-0.0013,0.0037,no clear effect
+False,logreg,ratio,drop_from_full,pr,-0.0003,0.0033,no clear effect
+False,logreg,time,add_to_base,roc,0.0006,0.0046,no clear effect
+False,logreg,time,add_to_base,pr,-0.0006,0.0017,no clear effect
+False,logreg,time,drop_from_full,roc,0.0004,0.0058,no clear effect
+False,logreg,time,drop_from_full,pr,-0.0004,0.0009,no clear effect
+False,logreg,history,add_to_base,roc,-0.0014,0.0012,hurts
+False,logreg,history,add_to_base,pr,-0.0006,0.0006,hurts
+False,logreg,history,drop_from_full,roc,-0.0006,0.0012,no clear effect
+False,logreg,history,drop_from_full,pr,-0.0003,0.0005,no clear effect
+False,logreg,freq,add_to_base,roc,-0.0009,0.0015,no clear effect
+False,logreg,freq,add_to_base,pr,0.0,0.0004,no clear effect
+False,logreg,freq,drop_from_full,roc,-0.0009,0.0018,no clear effect
+False,logreg,freq,drop_from_full,pr,-0.0002,0.0002,no clear effect
+False,logreg,target,add_to_base,roc,0.0009,0.0019,no clear effect
+False,logreg,target,add_to_base,pr,0.0009,0.0006,helps
+False,logreg,target,drop_from_full,roc,0.0004,0.0031,no clear effect
+False,logreg,target,drop_from_full,pr,0.0009,0.0005,helps
+False,logreg,bins,add_to_base,roc,0.0007,0.0056,no clear effect
+False,logreg,bins,add_to_base,pr,0.0041,0.004,helps
+False,logreg,bins,drop_from_full,roc,0.0,0.0056,no clear effect
+False,logreg,bins,drop_from_full,pr,0.005,0.0034,helps
+False,rf,ALL,add_to_base,roc,0.0131,0.0323,no clear effect
+False,rf,ALL,add_to_base,pr,0.0103,0.0113,no clear effect
+False,rf,ratio,add_to_base,roc,0.0027,0.0227,no clear effect
+False,rf,ratio,add_to_base,pr,0.0045,0.0121,no clear effect
+False,rf,ratio,drop_from_full,roc,0.0039,0.0265,no clear effect
+False,rf,ratio,drop_from_full,pr,-0.0005,0.007,no clear effect
+False,rf,time,add_to_base,roc,0.013,0.0186,no clear effect
+False,rf,time,add_to_base,pr,0.0114,0.0123,no clear effect
+False,rf,time,drop_from_full,roc,0.0084,0.0149,no clear effect
+False,rf,time,drop_from_full,pr,-0.0011,0.0045,no clear effect
+False,rf,history,add_to_base,roc,0.0,0.0372,no clear effect
+False,rf,history,add_to_base,pr,-0.0001,0.0045,no clear effect
+False,rf,history,drop_from_full,roc,-0.0023,0.0161,no clear effect
+False,rf,history,drop_from_full,pr,-0.002,0.0129,no clear effect
+False,rf,freq,add_to_base,roc,0.0072,0.0117,no clear effect
+False,rf,freq,add_to_base,pr,0.0004,0.0039,no clear effect
+False,rf,freq,drop_from_full,roc,-0.0034,0.0203,no clear effect
+False,rf,freq,drop_from_full,pr,0.0002,0.0029,no clear effect
+False,rf,target,add_to_base,roc,0.0141,0.011,helps
+False,rf,target,add_to_base,pr,0.0052,0.0051,helps
+False,rf,target,drop_from_full,roc,-0.0041,0.038,no clear effect
+False,rf,target,drop_from_full,pr,0.0005,0.0023,no clear effect
+False,rf,bins,add_to_base,roc,-0.001,0.0257,no clear effect
+False,rf,bins,add_to_base,pr,-0.0055,0.0047,hurts
+False,rf,bins,drop_from_full,roc,0.0024,0.0145,no clear effect
+False,rf,bins,drop_from_full,pr,0.0044,0.0037,helps
