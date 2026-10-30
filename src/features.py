@@ -8,6 +8,7 @@ pipeline instead, so they are refit in every CV fold.
 
 import numpy as np
 import pandas as pd
+from sklearn.base import BaseEstimator, TransformerMixin
 
 RATIO_FEATURES = ["payload_per_sec", "latency_per_kb", "retry_x_latency"]
 TIME_FEATURES = ["hour_sin", "hour_cos", "weekday_sin", "weekday_cos"]
@@ -114,3 +115,73 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
         A copy of df with every column in STATELESS_FEATURES added.
     """
     return add_account_history_features(add_time_features(add_ratio_features(df)))
+
+
+class FrequencyEncoder(BaseEstimator, TransformerMixin):
+    """Replace each category by how common it was in the fit data.
+
+    Rationale: an account that appears very rarely (or very often) can behave
+    differently. Frequencies are learned in fit, so inside cross-validation
+    they come from training rows only. Categories unseen in fit get 0.
+    """
+
+    def fit(self, x, y=None):
+        """Learn category frequencies from the training rows."""
+        frame = pd.DataFrame(x)
+        self.columns_ = list(frame.columns)
+        self.freq_ = {
+            c: frame[c].value_counts(normalize=True).to_dict() for c in self.columns_
+        }
+        return self
+
+    def transform(self, x):
+        """Map categories to the frequencies learned in fit."""
+        frame = pd.DataFrame(x)
+        frame.columns = self.columns_
+        return np.column_stack(
+            [
+                frame[c].map(self.freq_[c]).fillna(0.0).to_numpy(dtype=float)
+                for c in self.columns_
+            ]
+        )
+
+    def get_feature_names_out(self, input_features=None):
+        """Return output column names."""
+        names = self.columns_ if input_features is None else input_features
+        return np.asarray([f"{c}_freq" for c in names], dtype=object)
+
+
+class QuantileBinner(BaseEstimator, TransformerMixin):
+    """Bin each numeric column into quantile groups.
+
+    Rationale: anomalies may depend on a range (for example very high
+    latency) rather than on a straight-line effect. Bin edges are learned
+    from the fit data only. Values beyond the edges fall in the first or
+    last bin. Input must have no missing values (impute first).
+    """
+
+    def __init__(self, n_bins: int = 5):
+        self.n_bins = n_bins
+
+    def fit(self, x, y=None):
+        """Learn the bin edges from the training rows."""
+        arr = np.asarray(x, dtype=float)
+        self.n_features_in_ = arr.shape[1]
+        qs = np.linspace(0, 1, self.n_bins + 1)[1:-1]
+        self.edges_ = [
+            np.unique(np.quantile(arr[:, j], qs)) for j in range(arr.shape[1])
+        ]
+        return self
+
+    def transform(self, x):
+        """Return the bin index of every value."""
+        arr = np.asarray(x, dtype=float)
+        return np.column_stack(
+            [np.digitize(arr[:, j], e) for j, e in enumerate(self.edges_)]
+        )
+
+    def get_feature_names_out(self, input_features=None):
+        """Return output column names."""
+        if input_features is None:
+            input_features = [f"x{j}" for j in range(self.n_features_in_)]
+        return np.asarray(input_features, dtype=object)
