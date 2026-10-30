@@ -7,6 +7,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
+from src.features import add_features
 from src.utils import train_val_test_split
 
 SEED = 42
@@ -69,6 +70,7 @@ def build_preprocessor(
         ]
     )
 
+
 def build_pipeline(
     model: BaseEstimator,
     num_cols: list[str] | None = None,
@@ -86,7 +88,10 @@ def build_pipeline(
     """
     return Pipeline([("prep", build_preprocessor(num_cols, cat_cols)), ("clf", model)])
 
-def split_xy(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
+
+def split_xy(
+    df: pd.DataFrame, extra: list[str] | None = None
+) -> tuple[pd.DataFrame, pd.Series]:
     """Separate model features from the target.
 
     Categorical columns are cast to plain strings because scikit-learn
@@ -94,17 +99,20 @@ def split_xy(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
 
     Args:
         df: A split of the cleaned data.
+        extra: Additional feature columns to keep (for example engineered
+            features).
 
     Returns:
         A (features, target) tuple.
     """
-    x = df[FEATURES].copy()
+    x = df[FEATURES + (extra or [])].copy()
     x[CATEGORICAL_FEATURES] = x[CATEGORICAL_FEATURES].astype(str)
     return x, df[TARGET]
 
 
 def load_splits(
     path: str = "data/clean/clean.parquet",
+    with_features: bool = False,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Load the cleaned data and recreate the Week 1 split.
 
@@ -113,9 +121,12 @@ def load_splits(
 
     Args:
         path: Path to the cleaned parquet file.
+        with_features: Add the stateless engineered features before splitting.
 
     Returns:
         A (train, val, test) tuple of DataFrames.
     """
     df = pd.read_parquet(path)
+    if with_features:
+        df = add_features(df)
     return train_val_test_split(df, (0.7, 0.15, 0.15), SEED, TARGET)
