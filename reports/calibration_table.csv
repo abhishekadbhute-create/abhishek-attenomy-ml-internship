@@ -1,0 +1,4 @@
+scores,mean score,Brier,log loss,PR-AUC,ROC-AUC
+raw,0.3751,0.155,0.4982,0.2459,0.793
+platt,0.0389,0.0332,0.1314,0.2459,0.793
+isotonic,0.0387,0.033,0.1308,0.2358,0.8048
