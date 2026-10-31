@@ -1,0 +1,17 @@
+score,error_code,retry_count,payload_size_kb,latency_ms,channel,interaction_type,kind
+0.488,err_rate_limit,3,4.95,72.9,web_app,model_inference,false alarm
+0.484,err_rate_limit,3,17.5,14.3,python_sdk,doc_extraction,false alarm
+0.463,err_auth_expired,1,96.84,128.5,web_app,model_inference,false alarm
+0.461,err_payload_too_large,3,22.26,90.4,rest_api,agent_orchestration,false alarm
+0.454,err_upstream_unavailable,3,29.0,66.7,web_app,agent_orchestration,false alarm
+0.449,err_timeout,3,60.72,88.4,web_app,doc_extraction,false alarm
+0.447,err_timeout,3,50.8,98.5,rest_api,api_query,false alarm
+0.442,err_rate_limit,3,4.42,58.8,python_sdk,api_query,false alarm
+0.012,NO_ERROR,0,6.12,70.2,python_sdk,doc_extraction,missed anomaly
+0.012,NO_ERROR,0,1.97,10.0,python_sdk,api_query,missed anomaly
+0.012,NO_ERROR,0,43.72,106.5,python_sdk,doc_extraction,missed anomaly
+0.012,NO_ERROR,0,38.55,83.1,python_sdk,doc_extraction,missed anomaly
+0.013,NO_ERROR,1,40.95,12.9,cli_tool,doc_extraction,missed anomaly
+0.013,NO_ERROR,1,12.2,91.9,web_app,batch_sync,missed anomaly
+0.013,NO_ERROR,0,17.64,99.3,cli_tool,batch_sync,missed anomaly
+0.013,NO_ERROR,1,5.76,53.1,web_app,batch_sync,missed anomaly
